@@ -1,0 +1,30 @@
+{
+  "name": "savebot",
+  "version": "1.0.0",
+  "description": "LINE Bot - save URLs with AI summaries to Notion/GitHub",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsc && node dist/server.js",
+    "panel": "node panel.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "@line/bot-sdk": "^10.6.0",
+    "@mozilla/readability": "^0.6.0",
+    "@notionhq/client": "^2.2.0",
+    "dotenv": "^16.4.0",
+    "fastify": "^5.8.2",
+    "jsdom": "^28.1.0",
+    "octokit": "^4.1.0",
+    "playwright": "^1.58.2",
+    "turndown": "^7.2.2"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.0",
+    "@types/node": "^22.0.0",
+    "@types/turndown": "^5.0.0",
+    "typescript": "^5.7.0"
+  }
+}
