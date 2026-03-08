@@ -325,6 +325,14 @@ const HTML = `<!DOCTYPE html>
               color: #94a3b8; cursor: pointer; padding: 2px 8px; font-size: 11px; margin-left: 8px; }
   .copy-btn:hover { color: #38bdf8; border-color: #38bdf8; }
   /* Settings */
+  .select-input { background: #0f172a; border: 1px solid #475569; border-radius: 6px;
+                  padding: 8px 12px; color: #e2e8f0; font-size: 13px; min-width: 160px;
+                  appearance: auto; }
+  .select-input:focus { outline: none; border-color: #38bdf8; }
+  .model-input { background: #0f172a; border: 1px solid #475569; border-radius: 6px;
+                 padding: 8px 12px; color: #e2e8f0; font-size: 13px; width: 280px; }
+  .model-input:focus { outline: none; border-color: #38bdf8; }
+  .setting-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
   .setting-group { margin-bottom: 20px; }
   .setting-label { font-size: 13px; color: #94a3b8; margin-bottom: 6px; display: flex;
                    align-items: center; gap: 8px; }
@@ -423,6 +431,24 @@ const HTML = `<!DOCTYPE html>
 <div class="container hidden" id="pageSettings">
   <div class="card">
     <div class="card-title">AI Settings</div>
+
+    <div class="setting-group">
+      <div class="setting-label">Provider & Model</div>
+      <div class="setting-row">
+        <select class="select-input" id="cfgProvider" onchange="onProviderChange()">
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="openai">OpenAI (GPT)</option>
+          <option value="gemini">Google (Gemini)</option>
+          <option value="xai">xAI (Grok)</option>
+        </select>
+        <input class="model-input" id="cfgModel" placeholder="model name">
+        <span class="hint" id="modelHint"></span>
+      </div>
+      <div class="prompt-vars" style="margin-top:6px;">
+        API Key from .env:
+        <span id="envKeyHint" style="color:#38bdf8;">ANTHROPIC_API_KEY</span>
+      </div>
+    </div>
 
     <div class="setting-group">
       <div class="setting-label">
@@ -581,14 +607,40 @@ logBox.addEventListener('scroll', () => {
 });
 
 // --- Settings ---
+const DEFAULT_MODELS = {
+  anthropic: 'claude-haiku-4-5-20251001',
+  openai: 'gpt-4o-mini',
+  gemini: 'gemini-2.0-flash',
+  xai: 'grok-3-mini',
+};
+const ENV_KEYS = {
+  anthropic: 'ANTHROPIC_API_KEY',
+  openai: 'OPENAI_API_KEY',
+  gemini: 'GEMINI_API_KEY',
+  xai: 'XAI_API_KEY',
+};
+
+function onProviderChange() {
+  const p = document.getElementById('cfgProvider').value;
+  const modelInput = document.getElementById('cfgModel');
+  document.getElementById('modelHint').textContent = 'default: ' + (DEFAULT_MODELS[p] || '');
+  document.getElementById('envKeyHint').textContent = ENV_KEYS[p] || '';
+  if (!modelInput.value || Object.values(DEFAULT_MODELS).includes(modelInput.value)) {
+    modelInput.value = DEFAULT_MODELS[p] || '';
+  }
+}
+
 async function loadSettings() {
   try {
     const r = await fetch('/api/config');
     cfg = await r.json();
+    document.getElementById('cfgProvider').value = cfg.ai.provider || 'anthropic';
+    document.getElementById('cfgModel').value = cfg.ai.model || DEFAULT_MODELS[cfg.ai.provider] || '';
     document.getElementById('cfgSummary').checked = cfg.ai.enableSummary;
     document.getElementById('cfgPrompt').value = cfg.ai.prompt;
     renderTags('cfgCategories', cfg.ai.categories, 'categories');
     renderTags('cfgTags', cfg.ai.predefinedTags, 'tags');
+    onProviderChange();
   } catch(e) { toast('Failed to load config', false); }
 }
 
@@ -625,6 +677,8 @@ document.addEventListener('keydown', (e) => {
 });
 
 async function saveSettings() {
+  cfg.ai.provider = document.getElementById('cfgProvider').value;
+  cfg.ai.model = document.getElementById('cfgModel').value;
   cfg.ai.enableSummary = document.getElementById('cfgSummary').checked;
   cfg.ai.prompt = document.getElementById('cfgPrompt').value;
   try {
